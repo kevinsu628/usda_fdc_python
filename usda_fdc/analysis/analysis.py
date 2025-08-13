@@ -3,10 +3,11 @@ Food nutrient analysis functionality.
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any, Union, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from ..models import Food, Nutrient
 from .dri import DriType, Gender, get_dri
+
 
 @dataclass
 class NutrientValue:
@@ -145,7 +146,7 @@ def analyze_food(
             analysis.fat_per_serving = amount
         elif nutrient_id == "carbs":
             analysis.carbs_per_serving = amount
-        elif nutrient_id == "calories":
+        elif nutrient_id == "calories" and nutrient.unit_name == "kcal":
             analysis.calories_per_serving = amount
     
     # Calculate macronutrient distribution

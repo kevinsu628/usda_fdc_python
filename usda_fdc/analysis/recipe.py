@@ -263,6 +263,12 @@ def analyze_recipe(
                 )
                 nutrient_map[nutrient.id] = new_nutrient
                 combined_food.nutrients.append(new_nutrient)
+    # Normalize totals to per-100g of the recipe (expected by analyze_food)
+    total_weight_g = recipe.total_weight_g
+    if total_weight_g > 0:
+        scale_to_per_100g = 100.0 / total_weight_g
+        for nutrient in combined_food.nutrients:
+            nutrient.amount *= scale_to_per_100g
     
     # Analyze the combined food per serving
     per_serving_analysis = analyze_food(
