@@ -57,7 +57,8 @@ class RecipeAnalysis:
 def parse_ingredient(
     text: str,
     client: FdcClient,
-    search_limit: int = 5
+    search_limit: int = 5,
+    data_type: Optional[List[str]] = None
 ) -> Optional[Ingredient]:
     """
     Parse an ingredient description into an Ingredient object.
@@ -66,6 +67,9 @@ def parse_ingredient(
         text: The ingredient description (e.g., "1 cup flour").
         client: The FDC client to use for food lookup.
         search_limit: Maximum number of search results to consider.
+        data_type: Optional list of FDC data types to filter search results
+            (e.g., ["Branded", "Foundation"]). This is forwarded to the
+            underlying search call.
         
     Returns:
         An Ingredient object, or None if parsing failed.
@@ -96,7 +100,11 @@ def parse_ingredient(
         food_name = text
     
     # Search for the food
-    search_results = client.search(food_name, page_size=search_limit)
+    search_results = client.search(
+        food_name,
+        page_size=search_limit,
+        data_type=data_type
+    )
     
     if not search_results.foods:
         return None
@@ -175,7 +183,8 @@ def create_recipe(
     ingredient_texts: List[str],
     client: FdcClient,
     servings: int = 1,
-    description: Optional[str] = None
+    description: Optional[str] = None,
+    ingredient_data_types: Optional[List[Optional[List[str]]]] = None
 ) -> Recipe:
     """
     Create a recipe from ingredient descriptions.
@@ -186,16 +195,22 @@ def create_recipe(
         client: The FDC client to use for food lookup.
         servings: The number of servings the recipe makes.
         description: Optional description of the recipe.
+        data_type: Optional list of FDC data types to filter search results
+            when parsing ingredients (e.g., ["Branded", "Foundation"]).
         
     Returns:
         A Recipe object.
     """
     ingredients = []
     
-    for text in ingredient_texts:
-        ingredient = parse_ingredient(text, client)
+    if ingredient_data_types is None:
+        ingredient_data_types = [None] * len(ingredient_texts)
+    assert len(ingredient_texts) == len(ingredient_data_types), "Number of ingredient texts and data types must match"
+    
+    for text, data_type in zip(ingredient_texts, ingredient_data_types):
+        ingredient = parse_ingredient(text, client, data_type=data_type)
         if ingredient:
-            ingredients.append(ingredient)
+            ingredients.append(ingredient)    
     
     return Recipe(
         name=name,
